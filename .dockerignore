@@ -1,0 +1,5 @@
+# Avoid sending these to Docker context
+.git
+vendor
+node_modules
+*.log
