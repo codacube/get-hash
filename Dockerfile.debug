@@ -1,0 +1,29 @@
+# Use official Golang image as base
+FROM docker.io/library/golang:1.25 AS debug
+
+# Install Air (live reload tool) for hot-reloading dev workflow
+RUN go install github.com/air-verse/air@latest
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+# Set working directory inside container
+WORKDIR /app
+COPY . .
+RUN go build -gcflags="all=-N -l" -o /tmp/get-hash .
+
+# For delve
+EXPOSE 2345
+
+ENTRYPOINT ["/go/bin/dlv", "--listen=:2345", "--headless=true", "--api-version=2", "exec", "/tmp/get-hash", "--", "<file_to_hash>"]
+# --accept-multiclient - should the VSCode debugger stop, it keeps Delve alive and waiting for reconnect
+# ENTRYPOINT ["/go/bin/dlv", "--listen=:2345", "--headless=true", "--api-version=2", "--accept-multiclient", "--log", "--log-output=debugger,dap,rpc", "exec", "/tmp/get-hash", "--", "/data/Screenshot_20251102_195622.png"]
+# If debug build is removed above, then build it here
+# ENTRYPOINT ["/bin/sh", "-c", "go build -gcflags='all=-N -l' -o myapp . && /go/bin/dlv --listen=:40000 --headless=true --api-version=2 --accept-multiclient exec ./myapp -- \"$@\"", "--"]
+
+# To build the image
+# podman build -f Dockerfile.debug -t get-hash .
+
+# To run it - mount the $(pwd) to the image /app folder (volume mount)
+# podman run --rm -it -p 2345:2345 -v <folder_containing_file_to_hash>:/data get-hash 
+
+# Restarting (no timeout)
+# podman restart -t 0 get-hash

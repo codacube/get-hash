@@ -15,9 +15,10 @@ Dockerfile included to run delve for debugging (or drop into a shell prompt)
       "type": "go",
       "request": "attach",
       "mode": "remote",
-      "remotePath": "${workspaceFolder}",
-      "port": 43000,
-      "host": "127.0.0.1"
+      "cwd": "${workspaceFolder}",
+      "port": 2345,
+      "host": "127.0.0.1",
+      "remotePath": "/app"
     }
   ]
 }

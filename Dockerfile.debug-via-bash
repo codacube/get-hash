@@ -1,0 +1,40 @@
+# Use official Golang image as base
+FROM docker.io/library/golang:1.25 AS debug
+
+# Install Air (live reload tool) for hot-reloading dev workflow
+RUN go install github.com/air-verse/air@latest
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+# Set working directory inside container
+WORKDIR /app
+
+# For delve
+EXPOSE 2345
+
+# Jump into bash
+CMD ["/bin/bash"]
+
+
+# To build the container
+# podman build -f Dockerfile.debug-via-bash -t get-hash .
+
+# To run the container 
+# podman run --rm -it -p 2345:2345 -v $(pwd):/app -v <folder_containing_file_to_hash>:/data get-hash 
+
+# Might be needed for podman? - seems to work OK without these:
+# --security-opt seccomp=unconfined: Often needed for Go debugging to allow necessary syscalls.
+# --cap-add=SYS_PTRACE: Explicitly allows the debugger to attach to the process.
+# podman run --rm -it --security-opt seccomp=unconfined --cap-add=SYS_PTRACE -p 2345:2345 -v $(pwd):/app -v <folder_containing_file_to_hash>:/data get-hash 
+
+# To restart (no timeout)
+# podman restart -t 0 get-hash
+
+# Once at the bash shell, you'll need to build the executable for debugging, then run delve:
+# go build -gcflags="all=-N -l" -o /tmp/get-hash .
+# dlv --listen=:2345 --headless --api-version=2 exec /tmp/get-hash -- /data/<file_to_hash.ext>
+# (or add multiclient to keep delve alive, and logging) dlv --listen=:2345 --headless --api-version=2 --accept-multiclient --log --log-output=debugger,dap,rpc exec /tmp/get-hash -- /data/<file_to_hash.ext>
+# OR, one line:
+# dlv debug --headless --listen=127.0.0.1:2345 --api-version=2 -- <file_to_hash.ext>
+
+# Note: Arguments must be passed when delve launches
+# Delve instructions FROM https://github.com/charmbracelet/bubbletea
