@@ -24,6 +24,7 @@ CMD ["/bin/bash"]
 # Might be needed for podman? - seems to work OK without these:
 # --security-opt seccomp=unconfined: Often needed for Go debugging to allow necessary syscalls.
 # --cap-add=SYS_PTRACE: Explicitly allows the debugger to attach to the process.
+# --security-opt label=disable to temporarily disable SELinux separation for that container to test if that is the blocker
 # podman run --rm -it --security-opt seccomp=unconfined --cap-add=SYS_PTRACE -p 2345:2345 -v $(pwd):/app -v <folder_containing_file_to_hash>:/data get-hash 
 
 # To restart (no timeout)
@@ -34,7 +35,7 @@ CMD ["/bin/bash"]
 # dlv --listen=:2345 --headless --api-version=2 exec /tmp/get-hash -- /data/<file_to_hash.ext>
 # (or add multiclient to keep delve alive, and logging) dlv --listen=:2345 --headless --api-version=2 --accept-multiclient --log --log-output=debugger,dap,rpc exec /tmp/get-hash -- /data/<file_to_hash.ext>
 # OR, one line:
-# dlv debug --headless --listen=127.0.0.1:2345 --api-version=2 -- <file_to_hash.ext>
+# dlv debug --headless --listen=:2345 --api-version=2 -- <file_to_hash.ext>
 
 # Note: Arguments must be passed when delve launches
 # Delve instructions FROM https://github.com/charmbracelet/bubbletea
